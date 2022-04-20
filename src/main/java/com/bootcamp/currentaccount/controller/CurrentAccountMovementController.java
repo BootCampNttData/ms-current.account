@@ -14,8 +14,8 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/currentAccountMovement")
 @RequiredArgsConstructor
 public class CurrentAccountMovementController {
-    @Value("${passiveproducts.server.url}")
-    private String passPrdUrl;
+//    @Value("${passiveproducts.server.url}")
+//    private String passPrdUrl;
     
     public final CurrentAccountMovementService service;
     @GetMapping
@@ -28,19 +28,19 @@ public class CurrentAccountMovementController {
         return service.findByAccountNumber(num);
     }
 
-    @GetMapping("/currentAccountBalance/{currentAccount}")
-    public String getAccountBalance(@PathVariable("currentAccount") String currentAccount){
+    @GetMapping("/currentAccountBalance/{numberAccount}")
+    public String getAccountBalance(@PathVariable("numberAccount") String numberAccount){
         double balance=0;
-        RestTemplate restTemplate=new RestTemplate();
-        String urlDp = passPrdUrl +"/currentAccountMovement/find/" + currentAccount;
-        ResponseEntity<CurrentAccountMovement[]> currentAccountMovements = restTemplate.getForEntity(urlDp, CurrentAccountMovement[].class);
-        for(CurrentAccountMovement am: currentAccountMovements.getBody()){
-            if (am.getMovementType().equals("D")){
-                balance += am.getAmount();
-            }else if (am.getMovementType().equals("R")){
-                balance -= am.getAmount();
-            }
-        }
+//        RestTemplate restTemplate=new RestTemplate();
+//        String urlDp = passPrdUrl +"/currentAccountMovement/find/" + currentAccount;
+//        ResponseEntity<CurrentAccountMovement[]> currentAccountMovements = restTemplate.getForEntity(urlDp, CurrentAccountMovement[].class);
+//        for(CurrentAccountMovement am: currentAccountMovements.getBody()){
+//            if (am.getMovementType().equals("D")){
+//                balance += am.getAmount();
+//            }else if (am.getMovementType().equals("R")){
+//                balance -= am.getAmount();
+//            }
+//        }
         return String.valueOf(balance);
     }
 
