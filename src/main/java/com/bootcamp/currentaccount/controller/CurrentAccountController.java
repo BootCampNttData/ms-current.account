@@ -76,7 +76,7 @@ public class CurrentAccountController {
     }
 
     @GetMapping("movement/find/{num}")
-    public Flux<CurrentAccountMovement> getByAccountNumber(@PathVariable("num") String num){
+    public Flux<CurrentAccountMovement> getByAccountNumber(@PathVariable("num") Integer num){
         return currentAccountMovementService.findByAccountNumber(num);
     }
 
