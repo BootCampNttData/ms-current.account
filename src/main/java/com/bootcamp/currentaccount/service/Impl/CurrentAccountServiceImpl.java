@@ -47,8 +47,8 @@ public class CurrentAccountServiceImpl implements CurrentAccountService {
     }
 
     @Override
-    public Flux<CurrentAccount> findByRucNumber(String ruc) {
-        return repository.findByRucNumber(ruc);
+    public Flux<CurrentAccount> findByClientRuc(String ruc) {
+        return repository.findByClientRuc(ruc);
     }
 //    @Override
 //    public Mono<CurrentAccount> findByClientIdAndCurrentAccountype(String num,String type) {

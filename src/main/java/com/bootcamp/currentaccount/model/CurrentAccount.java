@@ -12,7 +12,7 @@ public class CurrentAccount {
     @Id
     private String  id;
     private String  clientRuc;
-    private Integer currentAccountNumber;
+    private Integer accountNumber;
     private Double  feeAmount;
     private Double  minimalAmount;
     private Integer movementLimit;

@@ -9,7 +9,7 @@ public interface CurrentAccountService {
     Flux<CurrentAccount> findAll();
     Mono<CurrentAccount> create(CurrentAccount currentAccount);
     Mono<CurrentAccount> findByAccountNumber(String num);
-    Flux<CurrentAccount> findByRucNumber(String ruc);
+    Flux<CurrentAccount> findByClientRuc(String ruc);
     Mono<CurrentAccount> update(CurrentAccount currentAccount);
     Mono<CurrentAccount> deleteById(String id);
     Mono delete(CurrentAccount currentAccount);

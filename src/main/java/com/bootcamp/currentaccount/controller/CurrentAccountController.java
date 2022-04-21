@@ -1,9 +1,10 @@
 package com.bootcamp.currentaccount.controller;
 
 import com.bootcamp.currentaccount.model.CurrentAccount;
+import com.bootcamp.currentaccount.model.CurrentAccountMovement;
+import com.bootcamp.currentaccount.service.CurrentAccountMovementService;
 import com.bootcamp.currentaccount.service.CurrentAccountService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import reactor.core.publisher.Flux;
@@ -13,16 +14,15 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/currentAccount")
 @RequiredArgsConstructor
 public class CurrentAccountController {
-    @Value("${passiveproducts.server.url}")
-    private String passPrdUrl;
 
     public final CurrentAccountService service;
+    public final CurrentAccountMovementService currentAccountMovementService;
     @GetMapping
     public Flux<CurrentAccount> getAll(){
         return service.findAll();
     }
 
-    @GetMapping("/currentAccountNumber/{num}")
+    @GetMapping("/accountNumber/{num}")
     public Mono<CurrentAccount> findByAccountNumber(@PathVariable("num") String num){
         return service.findByAccountNumber(num);
     }
@@ -66,9 +66,54 @@ public class CurrentAccountController {
     /** *****************************************/
     @GetMapping("/findByClientRuc/{ruc}")
     public Flux<CurrentAccount> findByClientRuc(@PathVariable("ruc") String ruc){
-        return service.findByRucNumber(ruc);
+        return service.findByClientRuc(ruc);
     }
 
 
+    @GetMapping("/movement")
+    public Flux<CurrentAccountMovement> getAllMovements(){
+        return currentAccountMovementService.findAll();
+    }
+
+    @GetMapping("movement/find/{num}")
+    public Flux<CurrentAccountMovement> getByAccountNumber(@PathVariable("num") String num){
+        return currentAccountMovementService.findByAccountNumber(num);
+    }
+
+    @GetMapping("/currentAccountBalance/{numberAccount}")
+    public String getAccountBalance(@PathVariable("numberAccount") String numberAccount){
+        double balance=0;
+//        RestTemplate restTemplate=new RestTemplate();
+//        String urlDp = passPrdUrl +"/currentAccountMovement/find/" + currentAccount;
+//        ResponseEntity<CurrentAccountMovement[]> currentAccountMovements = restTemplate.getForEntity(urlDp, CurrentAccountMovement[].class);
+//        for(CurrentAccountMovement am: currentAccountMovements.getBody()){
+//            if (am.getMovementType().equals("D")){
+//                balance += am.getAmount();
+//            }else if (am.getMovementType().equals("R")){
+//                balance -= am.getAmount();
+//            }
+//        }
+        return String.valueOf(balance);
+    }
+
+    @PostMapping("/movement")
+    public Mono<CurrentAccountMovement> create(@RequestBody CurrentAccountMovement currentAccountMovement){
+        return currentAccountMovementService.create(currentAccountMovement);
+    }
+
+    @PostMapping("/movement/update")
+    public Mono<CurrentAccountMovement> update(@RequestBody CurrentAccountMovement currentAccountMovement){
+        return currentAccountMovementService.create(currentAccountMovement);
+    }
+
+    @DeleteMapping("movement")
+    public Mono<CurrentAccountMovement> delete(@RequestBody CurrentAccountMovement currentAccountMovement){
+        return currentAccountMovementService.delete(currentAccountMovement);
+    }
+
+    @DeleteMapping("movement/byId/{id}")
+    public Mono<CurrentAccountMovement> deleteMovementById(@PathVariable("id") String id){
+        return currentAccountMovementService.deleteById(id);
+    }
 
 }
