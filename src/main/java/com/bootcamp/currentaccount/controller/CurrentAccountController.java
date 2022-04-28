@@ -11,7 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/currentAccount")
+@RequestMapping("/currentaccount")
 @RequiredArgsConstructor
 public class CurrentAccountController {
 
@@ -25,6 +25,20 @@ public class CurrentAccountController {
     @GetMapping("/accountNumber/{num}")
     public Mono<CurrentAccount> findByAccountNumber(@PathVariable("num") String num){
         return service.findByAccountNumber(num);
+    }
+
+    /**
+     * Obtiene una lista de las cuentas Corrientes que posea el Cliente segun su Documento
+     * @param clientRuc Documento del Cliente (RUC)
+     * @return Lista con las cuentas pertenecientes al Documento
+     */
+    @GetMapping("/findAcountsByClientRuc/{clientRuc}")
+    public Flux<Integer> findAcountsByClientId(@PathVariable("clientRuc") String clientRuc) {
+        var accounts = service.findByClientRuc(clientRuc);
+        var lst = accounts.map(acc -> {
+            return acc.getAccountNumber();
+        });
+        return lst;
     }
 
     /**
