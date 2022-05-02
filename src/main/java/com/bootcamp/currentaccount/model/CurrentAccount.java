@@ -11,8 +11,8 @@ import java.util.Date;
 public class CurrentAccount {
     @Id
     private String  id;
-    private String  clientRuc;
-    private Integer accountNumber;
+    private String  clientId;
+    private String  accountNumber;
     private Double  feeAmount;
     private Double  minimalAmount;
     private Integer movementLimit;

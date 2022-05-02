@@ -12,7 +12,7 @@ import java.util.Date;
 public class CurrentAccountMovement {
     @Id
     private String  id;
-    private Integer accountNumber;
+    private String  accountNumber;
     private String  movementType;
     private Date    movementDate;
     private Double  amount;

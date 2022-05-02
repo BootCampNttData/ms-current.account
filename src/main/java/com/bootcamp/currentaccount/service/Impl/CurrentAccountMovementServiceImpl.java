@@ -45,13 +45,13 @@ public class CurrentAccountMovementServiceImpl implements CurrentAccountMovement
     }
 
     @Override
-    public Flux<CurrentAccountMovement> findByAccountNumber(Integer mun) {
+    public Flux<CurrentAccountMovement> findByAccountNumber(String mun) {
         return repository.findByAccountNumber(mun);
     }
 
 
     @Override
-    public Mono<Double> getBalanceByAccount(Integer num) {
+    public Mono<Double> getBalanceByAccount(String num) {
         var movements = this.findByAccountNumber(num);
         var balance = movements
                 .map(mov -> {

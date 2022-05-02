@@ -33,7 +33,7 @@ public class CurrentAccountController {
      * @return Lista con las cuentas pertenecientes al Documento
      */
     @GetMapping("/findAcountsByClientRuc/{clientRuc}")
-    public Flux<Integer> findAcountsByClientId(@PathVariable("clientRuc") String clientRuc) {
+    public Flux<String> findAcountsByClientId(@PathVariable("clientRuc") String clientRuc) {
         var accounts = service.findByClientRuc(clientRuc);
         var lst = accounts.map(acc -> {
             return acc.getAccountNumber();
@@ -73,7 +73,7 @@ public class CurrentAccountController {
     }
 
     @DeleteMapping("/byId/{id}")
-    public Mono<CurrentAccount> deleteById(@RequestBody String id){
+    public Mono<CurrentAccount> deleteById(@PathVariable String id){
         return service.deleteById(id);
     }
 
@@ -90,7 +90,7 @@ public class CurrentAccountController {
     }
 
     @GetMapping("movement/find/{num}")
-    public Flux<CurrentAccountMovement> getByAccountNumber(@PathVariable("num") Integer num){
+    public Flux<CurrentAccountMovement> getByAccountNumber(@PathVariable("num") String num){
         return currentAccountMovementService.findByAccountNumber(num);
     }
 

@@ -7,6 +7,6 @@ import reactor.core.publisher.Mono;
 
 public interface CurrentAccountRepository extends ReactiveCrudRepository<CurrentAccount, String> {
     Mono<CurrentAccount> findByAccountNumber(String num);
-    Flux<CurrentAccount> findByClientRuc(String ruc);
+    Flux<CurrentAccount> findByClientId(String clientId);
 
 }
