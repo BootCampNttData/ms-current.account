@@ -1,30 +1,44 @@
 package com.bootcamp.currentaccount.controller;
 
+import com.bootcamp.currentaccount.exception.CurrentAccountValidationException;
 import com.bootcamp.currentaccount.model.CurrentAccount;
 import com.bootcamp.currentaccount.model.CurrentAccountMovement;
 import com.bootcamp.currentaccount.service.CurrentAccountMovementService;
 import com.bootcamp.currentaccount.service.CurrentAccountService;
+import com.bootcamp.currentaccount.util.Constants;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.validator.constraints.CreditCardNumber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
 
 @RestController
 @RequestMapping("/currentaccount")
 @RequiredArgsConstructor
 public class CurrentAccountController {
-
-    public final CurrentAccountService service;
+    private final Constants constants;
+    public final CurrentAccountService currentAccountService;
     public final CurrentAccountMovementService currentAccountMovementService;
+    Logger logger = LoggerFactory.getLogger(CurrentAccountController.class);
+
     @GetMapping
     public Flux<CurrentAccount> getAll(){
-        return service.findAll();
+        return currentAccountService.findAll();
     }
 
     @GetMapping("/accountNumber/{num}")
     public Mono<CurrentAccount> findByAccountNumber(@PathVariable("num") String num){
-        return service.findByAccountNumber(num);
+        return currentAccountService.findByAccountNumber(num);
     }
 
     /**
@@ -34,7 +48,7 @@ public class CurrentAccountController {
      */
     @GetMapping("/findAcountsByClientRuc/{clientRuc}")
     public Flux<String> findAcountsByClientId(@PathVariable("clientRuc") String clientRuc) {
-        var accounts = service.findByClientRuc(clientRuc);
+        var accounts = currentAccountService.findByClientRuc(clientRuc);
         var lst = accounts.map(acc -> {
             return acc.getAccountNumber();
         });
@@ -42,45 +56,46 @@ public class CurrentAccountController {
     }
 
     /**
-     * Crea una nueva cuenta Ahorro o Corriente dependiendo del pararameto ingresado en CurrentAccountype [C|A]
-     * Tambien valida si el cliente es una Empresa [E] o persona natural [P]
-     * En caso que no se cumplan las condiciones retornara un objeto vacio y no se almacenara en la BD.
+     * Crea una nueva cuenta Corriente
+     * Tambien valida si la cuenta ya existe en la BD
+     * En caso que no se cumplan las condiciones retornara una excepcion con los mensajes correspondientes.
      * @param currentAccount
      * @return
      */
     @PostMapping
     public Mono<CurrentAccount> create(@RequestBody CurrentAccount currentAccount){
 
-        RestTemplate restTemplate=new RestTemplate();
-        Mono<CurrentAccount> mono=Mono.just(new CurrentAccount());
-
-        boolean haveCurrentAcc=false;
-
-//            String url = passPrdUrl +"/currentAccount/findByClientId/" + currentAccount.getClientId();
-//            ResponseEntity<CurrentAccount[]> currentAccounts = restTemplate.getForEntity(url,CurrentAccount[].class);
-
-        return service.create(currentAccount);
+        return Mono.just(currentAccount)
+                .then(check(currentAccount, cur -> Optional.of(cur).isEmpty(), "Saving Account has not data"))
+                .then(check(currentAccount, cur -> ObjectUtils.isEmpty(cur.getClientId()), "Client Id is required"))
+                .then(check(currentAccount, cur -> ObjectUtils.isEmpty(cur.getAccountNumber()), "Account Number required"))
+                .then((isPyme(currentAccount.getClientId()).map(m -> m.booleanValue()?findCreditCardByClient(currentAccount.getClientId()) :(new CurrentAccountValidationException("")))
+                        .<String>handle((record, sink) -> sink.error(new CurrentAccountValidationException("The Client does no have a Credit Card")))))
+                .then(currentAccountService.findByAccountNumber(currentAccount.getAccountNumber())
+                        .<CurrentAccount>handle((record, sink) -> sink.error(new CurrentAccountValidationException("The account already exists")))
+                        .switchIfEmpty(currentAccountService.create(currentAccount)))
+                ;
     }
 
     @PostMapping("/update")
     public Mono<CurrentAccount> update(@RequestBody CurrentAccount currentAccount){
-        return service.create(currentAccount);
+        return currentAccountService.create(currentAccount);
     }
 
     @DeleteMapping
     public Mono<CurrentAccount> delete(@RequestBody CurrentAccount currentAccount){
-        return service.delete(currentAccount);
+        return currentAccountService.delete(currentAccount);
     }
 
     @DeleteMapping("/byId/{id}")
     public Mono<CurrentAccount> deleteById(@PathVariable String id){
-        return service.deleteById(id);
+        return currentAccountService.deleteById(id);
     }
 
     /** *****************************************/
     @GetMapping("/findByClientRuc/{ruc}")
     public Flux<CurrentAccount> findByClientRuc(@PathVariable("ruc") String ruc){
-        return service.findByClientRuc(ruc);
+        return currentAccountService.findByClientRuc(ruc);
     }
 
 
@@ -128,6 +143,37 @@ public class CurrentAccountController {
     @DeleteMapping("movement/byId/{id}")
     public Mono<CurrentAccountMovement> deleteMovementById(@PathVariable("id") String id){
         return currentAccountMovementService.deleteById(id);
+    }
+
+    private <T> Mono<Void> check(T account, Predicate<T> predicate, String messageForException) {
+        return Mono.create(sink -> {
+            if (predicate.test(account)) {
+                sink.error(new Exception(messageForException));
+                return;
+            } else {
+                sink.success();
+            }
+        });
+    }
+
+    public Mono<String> findCreditCardByClient(String clientId){
+        WebClient webClient = WebClient.create(constants.gwServer);
+        logger.info("Saving Accounts");
+        List<Integer> savAccLst=new ArrayList<>();
+
+        return   webClient.get()
+                .uri("/creditcard/findCreditCardByClientId/{id}",clientId)
+                .retrieve()
+                .bodyToMono(String.class);
+
+    }
+    public Mono<Boolean> isPyme(String clientId){
+        WebClient webClient = WebClient.create(constants.gwServer);
+        return   webClient.get()
+                .uri("/businessclient/isPyme/{clientId}",clientId)
+                .retrieve()
+                .bodyToMono(Boolean.class);
+
     }
 
 }
