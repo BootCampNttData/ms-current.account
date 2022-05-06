@@ -69,7 +69,8 @@ public class CurrentAccountController {
                 .then(check(currentAccount, cur -> Optional.of(cur).isEmpty(), "Saving Account has not data"))
                 .then(check(currentAccount, cur -> ObjectUtils.isEmpty(cur.getClientId()), "Client Id is required"))
                 .then(check(currentAccount, cur -> ObjectUtils.isEmpty(cur.getAccountNumber()), "Account Number required"))
-                .then((isPyme(currentAccount.getClientId()).map(m -> m.booleanValue()?findCreditCardByClient(currentAccount.getClientId()) :(new CurrentAccountValidationException("")))
+                .then((isPyme(currentAccount.getClientId())
+                        .map(m -> m.booleanValue()?findCreditCardByClient(currentAccount.getClientId()):(new CurrentAccountValidationException("")))
                         .<String>handle((record, sink) -> sink.error(new CurrentAccountValidationException("The Client does no have a Credit Card")))))
                 .then(currentAccountService.findByAccountNumber(currentAccount.getAccountNumber())
                         .<CurrentAccount>handle((record, sink) -> sink.error(new CurrentAccountValidationException("The account already exists")))
@@ -173,7 +174,14 @@ public class CurrentAccountController {
                 .uri("/businessclient/isPyme/{clientId}",clientId)
                 .retrieve()
                 .bodyToMono(Boolean.class);
+    }
 
+    public Mono<Boolean> isVip(String clientId){
+        WebClient webClient = WebClient.create(constants.gwServer);
+        return   webClient.get()
+                .uri("/retailclient/isVip/{clientId}",clientId)
+                .retrieve()
+                .bodyToMono(Boolean.class);
     }
 
 }
